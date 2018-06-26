@@ -1,6 +1,4 @@
-rubixtimer
-
-RubixTimer [-u|--undecorated]
+RubiksTimer [-u|--undecorated]
 
 Adding an undecorated flag will remove the border from the window.
 Use Escape to close the program.

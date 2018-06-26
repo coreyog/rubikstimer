@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/coreyog/rubixtimer/embedded"
-	"bitbucket.org/coreyog/rubixtimer/util"
+	"bitbucket.org/coreyog/rubikstimer/embedded"
+	"bitbucket.org/coreyog/rubikstimer/util"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
@@ -77,7 +77,7 @@ func main() {
 
 func run() {
 	cfg := pixelgl.WindowConfig{
-		Title:       "Rubix Timer",
+		Title:       "Rubik's Timer",
 		Bounds:      pixel.R(0, 0, 1000, 400),
 		VSync:       true,
 		Undecorated: undecorated,
@@ -257,7 +257,7 @@ func loadTTF(path string, size float64) (font.Face, error) {
 }
 
 func printHelp() {
-	fmt.Println("RubixTimer [-u|--undecorated]")
+	fmt.Println("RubiksTimer [-u|--undecorated]")
 	fmt.Println()
 	fmt.Println("Adding an undecorated flag will remove the border from the window.")
 	fmt.Println("Use Escape to close the program.")
