@@ -3,6 +3,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"bitbucket.org/coreyog/rubixtimer/embedded"
@@ -32,6 +34,24 @@ const (
 var currentState = stateWaitingForHold
 
 func main() {
+	help := []string{"-H", "--HELP", "/?", "HELP", "H"}
+	showHelp := false
+	for _, arg := range os.Args {
+		upperArg := strings.ToUpper(arg)
+		for _, h := range help {
+			if upperArg == h {
+				showHelp = true
+				break
+			}
+		}
+		if showHelp {
+			break
+		}
+	}
+	if showHelp {
+		printHelp()
+		return
+	}
 	sevenSegBigFont, err := loadTTF("assets/DSEG7Modern-Bold.ttf", 200)
 	if err != nil {
 		fmt.Println()
@@ -202,4 +222,14 @@ func loadTTF(path string, size float64) (font.Face, error) {
 		Size:    size,
 		Hinting: font.HintingFull,
 	}), nil
+}
+
+func printHelp() {
+	fmt.Println("RubixTimer")
+	fmt.Println()
+	fmt.Println("Hold both control keys on your keyboard to arm the timer.")
+	fmt.Println("The timer will start when you release either control key.")
+	fmt.Println("Press both control keys at the same time again to stop the timer.")
+	fmt.Println("Pressing R will restart the timer and wait for both controls to be pressed again.")
+	fmt.Println("F12 will flip between a Black and Magenta background (for use as a chroma key).")
 }
