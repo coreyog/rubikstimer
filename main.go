@@ -106,8 +106,16 @@ func run() {
 	elapsed := float64(0)
 	var mousePos pixel.Vec
 	mouseDown := false
+	refreshRate := float64(30)
+	if win.Monitor() != nil {
+		refreshRate = win.Monitor().RefreshRate()
+	} else if pixelgl.PrimaryMonitor() != nil {
+		refreshRate = pixelgl.PrimaryMonitor().RefreshRate()
+	}
+	fps := time.NewTicker(time.Second / time.Duration(refreshRate))
 
 	for !win.Closed() {
+		<-fps.C
 		dt.Tick()
 		if backgroundFlip {
 			win.Clear(colornames.Black)
