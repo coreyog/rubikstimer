@@ -31,7 +31,7 @@ func (dt *DeltaTimer) start() {
 // Tick is called at the first of every time to make timing measurements
 func (dt *DeltaTimer) Tick() {
 	dt.tickCount++
-	if dt.fixedRate == 0 {
+	if dt.fixedRate <= 0 {
 		now := time.Now()
 		dt.sinceLastFrame = now.Sub(dt.lastFrame).Seconds()
 		dt.totalTime = now.Sub(dt.startTime).Seconds()

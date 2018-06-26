@@ -32,9 +32,11 @@ const (
 )
 
 var currentState = stateWaitingForHold
+var undecorated = false
 
 func main() {
 	help := []string{"-H", "--HELP", "/?", "HELP", "H"}
+	undec := []string{"-U", "--U", "--UNDECORATED"}
 	showHelp := false
 	for _, arg := range os.Args {
 		upperArg := strings.ToUpper(arg)
@@ -44,14 +46,20 @@ func main() {
 				break
 			}
 		}
-		if showHelp {
-			break
+		if !undecorated {
+			for _, u := range undec {
+				if upperArg == u {
+					undecorated = true
+					break
+				}
+			}
 		}
 	}
 	if showHelp {
 		printHelp()
 		return
 	}
+
 	sevenSegBigFont, err := loadTTF("assets/DSEG7Modern-Bold.ttf", 200)
 	if err != nil {
 		fmt.Println()
@@ -69,9 +77,11 @@ func main() {
 
 func run() {
 	cfg := pixelgl.WindowConfig{
-		Title:  "Rubix Timer",
-		Bounds: pixel.R(0, 0, 1000, 400),
-		VSync:  true,
+		Title:       "Rubix Timer",
+		Bounds:      pixel.R(0, 0, 1000, 400),
+		VSync:       true,
+		Undecorated: undecorated,
+		Resizable:   false,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
@@ -92,8 +102,10 @@ func run() {
 
 	dt := util.NewDeltaTimer(0)
 	backgroundFlip := true
-	flipPressed := false
 	var startTime time.Time
+	elapsed := float64(0)
+	var mousePos pixel.Vec
+	mouseDown := false
 
 	for !win.Closed() {
 		dt.Tick()
@@ -103,20 +115,32 @@ func run() {
 			win.Clear(colornames.Magenta)
 		}
 
-		if win.Pressed(pixelgl.KeyF12) {
-			if !flipPressed {
-				backgroundFlip = !backgroundFlip
-				flipPressed = true
+		if mouseDown {
+			diff := win.MousePosition().Sub(mousePos)
+			if diff.X != 0 && diff.Y != 0 {
+				winPos := win.GetPos()
+				winPos.X += diff.X
+				winPos.Y -= diff.Y
+				win.SetPos(winPos)
 			}
-		} else {
-			flipPressed = false
+		}
+
+		if win.JustReleased(pixelgl.MouseButton1) {
+			mouseDown = false
+		}
+
+		if win.JustPressed(pixelgl.MouseButton1) {
+			mousePos = win.MousePosition()
+			mouseDown = true
+		}
+
+		if win.JustPressed(pixelgl.KeyF12) {
+			backgroundFlip = !backgroundFlip
 		}
 
 		if win.Pressed(pixelgl.KeyEscape) {
 			win.SetClosed(true)
 		}
-
-		elapsed := float64(0)
 
 		switch currentState {
 		case stateWaitingForHold:
@@ -225,7 +249,10 @@ func loadTTF(path string, size float64) (font.Face, error) {
 }
 
 func printHelp() {
-	fmt.Println("RubixTimer")
+	fmt.Println("RubixTimer [-u|--u|--undecorated]")
+	fmt.Println()
+	fmt.Println("Adding an undecorated flag will remove the border from the window.")
+	fmt.Println("Use Escape to close the program.")
 	fmt.Println()
 	fmt.Println("Hold both control keys on your keyboard to arm the timer.")
 	fmt.Println("The timer will start when you release either control key.")
