@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"bitbucket.org/coreyog/rubixtimer/embedded"
 	"bitbucket.org/coreyog/rubixtimer/util"
@@ -31,7 +32,6 @@ const (
 var currentState = stateWaitingForHold
 
 func main() {
-	fmt.Print("loading font...")
 	sevenSegBigFont, err := loadTTF("assets/DSEG7Modern-Bold.ttf", 200)
 	if err != nil {
 		fmt.Println()
@@ -44,7 +44,6 @@ func main() {
 	}
 	sevenSegBigAtlas = text.NewAtlas(sevenSegBigFont, text.ASCII)
 	sevenSegSmallAtlas = text.NewAtlas(sevenSegSmallFont, text.ASCII)
-	fmt.Print("DONE")
 	pixelgl.Run(run)
 }
 
@@ -72,18 +71,17 @@ func run() {
 	immediatePill(greenIndicator, win)
 
 	dt := util.NewDeltaTimer(0)
-	elapsed := float64(0)
 	backgroundFlip := true
 	flipPressed := false
+	var startTime time.Time
 
 	for !win.Closed() {
+		dt.Tick()
 		if backgroundFlip {
 			win.Clear(colornames.Black)
 		} else {
 			win.Clear(colornames.Magenta)
 		}
-		dt.Tick()
-		t := dt.SinceLastFrame()
 
 		if win.Pressed(pixelgl.KeyF12) {
 			if !flipPressed {
@@ -98,6 +96,8 @@ func run() {
 			win.SetClosed(true)
 		}
 
+		elapsed := float64(0)
+
 		switch currentState {
 		case stateWaitingForHold:
 			yellowIndicator.Draw(win)
@@ -111,10 +111,11 @@ func run() {
 			}
 			if !win.Pressed(pixelgl.KeyLeftControl) || !win.Pressed(pixelgl.KeyRightControl) {
 				currentState = stateRunning
+				startTime = time.Now()
 			}
 			break
 		case stateRunning:
-			elapsed += t
+			elapsed = time.Since(startTime).Seconds()
 			greenIndicator.Draw(win)
 			if win.Pressed(pixelgl.KeyLeftControl) && win.Pressed(pixelgl.KeyRightControl) {
 				currentState = stateDone
