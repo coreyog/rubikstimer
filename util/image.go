@@ -5,7 +5,7 @@ import (
 	"image"
 	_ "image/png" // png decoder
 
-	"bitbucket.org/coreyog/rubikstimer/embedded"
+	"github.com/coreyog/rubikstimer/embedded"
 
 	"github.com/faiface/pixel"
 )

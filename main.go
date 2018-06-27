@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/coreyog/rubikstimer/scenes"
-	"bitbucket.org/coreyog/rubikstimer/scenes/settingsscene"
-	"bitbucket.org/coreyog/rubikstimer/scenes/testscene"
-	"bitbucket.org/coreyog/rubikstimer/scenes/timerscene"
-	"bitbucket.org/coreyog/rubikstimer/util"
+	"github.com/coreyog/rubikstimer/scenes"
+	"github.com/coreyog/rubikstimer/scenes/settingsscene"
+	"github.com/coreyog/rubikstimer/scenes/testscene"
+	"github.com/coreyog/rubikstimer/scenes/timerscene"
+	"github.com/coreyog/rubikstimer/util"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"

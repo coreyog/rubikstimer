@@ -1,8 +1,8 @@
 package settingsscene
 
 import (
-	"bitbucket.org/coreyog/rubikstimer/scenes"
-	"bitbucket.org/coreyog/rubikstimer/util"
+	"github.com/coreyog/rubikstimer/scenes"
+	"github.com/coreyog/rubikstimer/util"
 
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"

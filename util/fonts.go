@@ -1,7 +1,7 @@
 package util
 
 import (
-	"bitbucket.org/coreyog/rubikstimer/embedded"
+	"github.com/coreyog/rubikstimer/embedded"
 
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"

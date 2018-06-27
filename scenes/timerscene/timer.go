@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"bitbucket.org/coreyog/rubikstimer/scenes"
-	"bitbucket.org/coreyog/rubikstimer/util"
+	"github.com/coreyog/rubikstimer/scenes"
+	"github.com/coreyog/rubikstimer/util"
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
