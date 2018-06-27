@@ -1,5 +1,6 @@
-// Migrated, slightly modified from www.jaapsch.net/scramble_cube.htm
 package util
+
+// Migrated, slightly modified from www.jaapsch.net/scramble_cube.htm
 
 import (
 	"math"
@@ -7,7 +8,7 @@ import (
 )
 
 // Default settings
-var seqlen = 30
+var seqlen = 20
 
 // Scramble returns a scramble string
 func Scramble() string {

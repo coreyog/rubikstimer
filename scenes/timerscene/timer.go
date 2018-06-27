@@ -14,14 +14,12 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-var sevenSegBigAtlas *text.Atlas
-var sevenSegSmallAtlas *text.Atlas
-
 var yellowIndicator *imdraw.IMDraw
 var greenIndicator *imdraw.IMDraw
 
 var bigSeven *text.Text
 var smallSeven *text.Text
+var galder *text.Text
 
 var streamerMode bool
 
@@ -29,6 +27,7 @@ type state int
 
 var elapsed float64
 var startTime time.Time
+var scramble string
 
 const (
 	stateWaitingForHold state = iota
@@ -44,19 +43,23 @@ var gear *pixel.Sprite
 func Init(win util.LimitedWindow) {
 	sevenSegBigFont, err := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 200)
 	if err != nil {
-		fmt.Println()
 		panic(err)
 	}
 	sevenSegSmallFont, err := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 100)
 	if err != nil {
-		fmt.Println()
 		panic(err)
 	}
-	sevenSegBigAtlas = text.NewAtlas(sevenSegBigFont, text.ASCII)
-	sevenSegSmallAtlas = text.NewAtlas(sevenSegSmallFont, text.ASCII)
+	galderFont, err := util.LoadTTF("assets/galderglynn titling rg.ttf", 32)
+	if err != nil {
+		panic(err)
+	}
+	sevenSegBigAtlas := text.NewAtlas(sevenSegBigFont, text.ASCII)
+	sevenSegSmallAtlas := text.NewAtlas(sevenSegSmallFont, text.ASCII)
+	galderAtlas := text.NewAtlas(galderFont, text.ASCII)
 
 	bigSeven = text.New(pixel.V(0, 0), sevenSegBigAtlas)
 	smallSeven = text.New(pixel.V(0, 0), sevenSegSmallAtlas)
+	galder = text.New(pixel.V(0, 0), galderAtlas)
 
 	yellowIndicator = imdraw.New(nil)
 	yellowIndicator.Color = colornames.Yellow
@@ -72,6 +75,9 @@ func Init(win util.LimitedWindow) {
 	}
 
 	gear = pixel.NewSprite(pic, pic.Bounds())
+
+	scramble = util.Scramble()
+	fmt.Fprint(galder, scramble)
 
 	streamerMode = false
 	elapsed = 0
@@ -134,6 +140,9 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	mat = mat.Moved(pixel.V(bigSeven.Bounds().W()+30, 0))
 	smallSeven.Draw(canvas, mat)
 
+	mat = pixel.IM.Moved(galder.Bounds().Center().Scaled(-1)).Moved(pixel.V(win.Bounds().W()/2, win.Bounds().H()-45))
+	galder.Draw(canvas, mat)
+
 	if !streamerMode && (currentState == stateDone || currentState == stateWaitingForHold) {
 		upperRight := pixel.V(canvas.Bounds().W()-25, canvas.Bounds().H()-25)
 		mat = pixel.IM.Moved(upperRight)
@@ -153,6 +162,9 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 
 func reset() {
 	elapsed = 0
+	scramble = util.Scramble()
+	galder.Clear()
+	fmt.Fprint(galder, scramble)
 	currentState = stateWaitingForHold
 }
 
@@ -170,7 +182,6 @@ func blink(dt *util.DeltaTimer) bool {
 func immediatePill(imd *imdraw.IMDraw, win util.LimitedWindow) {
 	pt := win.Bounds().Center()
 	pt.Y -= 150
-	pt.X -= 125
 
 	// lower left
 	pt.X -= 100
