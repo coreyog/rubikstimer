@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -21,6 +22,8 @@ var undecorated = false
 var currentScene scenes.SceneType
 
 func main() {
+	rand.Seed(time.Now().Unix())
+
 	help := []string{"-H", "--HELP", "/?", "HELP", "H"}
 	undec := []string{"-U", "--U", "--UNDECORATED"}
 	showHelp := false
