@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"bitbucket.org/coreyog/rubikstimer/scenes"
 	"bitbucket.org/coreyog/rubikstimer/util"
 
 	"github.com/faiface/pixel"
@@ -22,7 +23,7 @@ var greenIndicator *imdraw.IMDraw
 var bigSeven *text.Text
 var smallSeven *text.Text
 
-var backgroundFlip bool
+var streamerMode bool
 
 type state int
 
@@ -37,6 +38,7 @@ const (
 )
 
 var currentState = stateWaitingForHold
+var gear *pixel.Sprite
 
 // Init creates the resources for the Timer scene
 func Init(win util.LimitedWindow) {
@@ -64,20 +66,27 @@ func Init(win util.LimitedWindow) {
 	greenIndicator.Color = colornames.Lime
 	immediatePill(greenIndicator, win)
 
-	backgroundFlip = true
+	pic, err := util.LoadPicture("assets/gear.png")
+	if err != nil {
+		panic(err)
+	}
+
+	gear = pixel.NewSprite(pic, pic.Bounds())
+
+	streamerMode = false
 	elapsed = 0
 }
 
 // Draw updates and renders the Timer scene
-func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) {
-	if backgroundFlip {
-		canvas.Clear(colornames.Black)
-	} else {
+func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (change *scenes.SceneType) {
+	if streamerMode {
 		canvas.Clear(colornames.Magenta)
+	} else {
+		canvas.Clear(colornames.Black)
 	}
 
 	if win.JustPressed(pixelgl.KeyF12) {
-		backgroundFlip = !backgroundFlip
+		streamerMode = !streamerMode
 	}
 
 	switch currentState {
@@ -107,8 +116,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) {
 			greenIndicator.Draw(canvas)
 		}
 		if win.Pressed(pixelgl.KeyR) {
-			elapsed = 0
-			currentState = stateWaitingForHold
+			reset()
 		}
 	}
 
@@ -125,6 +133,27 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) {
 	bigSeven.Draw(canvas, mat)
 	mat = mat.Moved(pixel.V(bigSeven.Bounds().W()+30, 0))
 	smallSeven.Draw(canvas, mat)
+
+	if !streamerMode && (currentState == stateDone || currentState == stateWaitingForHold) {
+		upperRight := pixel.V(canvas.Bounds().W()-25, canvas.Bounds().H()-25)
+		mat = pixel.IM.Moved(upperRight)
+		gear.Draw(canvas, mat)
+		if win.JustPressed(pixelgl.MouseButtonLeft) {
+			mat = mat.Moved(gear.Frame().Center().Scaled(-1))
+			pt := mat.Unproject(win.MousePosition())
+			if gear.Frame().Contains(pt) {
+				reset()
+				change = new(scenes.SceneType)
+				*change = scenes.SettingsScene
+			}
+		}
+	}
+	return change
+}
+
+func reset() {
+	elapsed = 0
+	currentState = stateWaitingForHold
 }
 
 func buildTimer(t float64) (minsec string, milli string) {

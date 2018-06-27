@@ -15,4 +15,5 @@ type LimitedWindow interface {
 	JustPressed(pixelgl.Button) bool
 	Pressed(pixelgl.Button) bool
 	Bounds() pixel.Rect
+	MousePosition() pixel.Vec
 }
