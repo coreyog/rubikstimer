@@ -3,23 +3,25 @@ package util
 import (
 	"github.com/coreyog/rubikstimer/embedded"
 
+	"github.com/faiface/pixel/text"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 )
 
 // LoadTTF loads a TrueType font stored as an asset
-func LoadTTF(path string, size float64) (font.Face, error) {
+func LoadTTF(path string, size float64) *text.Atlas {
 	rawFont, err := embedded.Asset(path)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	ttfont, err := truetype.Parse(rawFont)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return truetype.NewFace(ttfont, &truetype.Options{
+	fontface := truetype.NewFace(ttfont, &truetype.Options{
 		Size:    size,
 		Hinting: font.HintingFull,
-	}), nil
+	})
+	return text.NewAtlas(fontface, text.ASCII)
 }

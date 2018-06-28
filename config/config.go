@@ -38,8 +38,10 @@ func LoadConfig() {
 		return
 	}
 
-	if config.ScrambleLength < 10 || config.ScrambleLength > 30 {
-		config.ScrambleLength = defaultConfig().ScrambleLength
+	if config.ScrambleLength < 10 {
+		config.ScrambleLength = 10
+	} else if config.ScrambleLength > 50 {
+		config.ScrambleLength = 50
 	}
 	if !checkTrigger(config.TimerStartTrigger) {
 		config.TimerStartTrigger = defaultConfig().TimerStartTrigger

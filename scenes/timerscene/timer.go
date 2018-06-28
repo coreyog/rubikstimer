@@ -20,7 +20,8 @@ var greenIndicator *imdraw.IMDraw
 
 var bigSeven *text.Text
 var smallSeven *text.Text
-var galder *text.Text
+var galderLine1 *text.Text
+var galderLine2 *text.Text
 
 var streamerMode bool
 
@@ -43,25 +44,14 @@ var gear *pixel.Sprite
 
 // Init creates the resources for the Timer scene
 func Init(win util.LimitedWindow) {
-	sevenSegBigFont, err := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 200)
-	if err != nil {
-		panic(err)
-	}
-	sevenSegSmallFont, err := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 100)
-	if err != nil {
-		panic(err)
-	}
-	galderFont, err := util.LoadTTF("assets/galderglynn titling rg.ttf", 32)
-	if err != nil {
-		panic(err)
-	}
-	sevenSegBigAtlas := text.NewAtlas(sevenSegBigFont, text.ASCII)
-	sevenSegSmallAtlas := text.NewAtlas(sevenSegSmallFont, text.ASCII)
-	galderAtlas := text.NewAtlas(galderFont, text.ASCII)
+	bigSevenAtlas := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 200)
+	smallSevenAtlas := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 100)
+	galderAtlas := util.LoadTTF("assets/galderglynn titling rg.ttf", 32)
 
-	bigSeven = text.New(pixel.V(0, 0), sevenSegBigAtlas)
-	smallSeven = text.New(pixel.V(0, 0), sevenSegSmallAtlas)
-	galder = text.New(pixel.V(0, 0), galderAtlas)
+	bigSeven = text.New(pixel.V(0, 0), bigSevenAtlas)
+	smallSeven = text.New(pixel.V(0, 0), smallSevenAtlas)
+	galderLine1 = text.New(pixel.V(0, 0), galderAtlas)
+	galderLine2 = text.New(pixel.V(0, 0), galderAtlas)
 
 	yellowIndicator = imdraw.New(nil)
 	yellowIndicator.Color = colornames.Yellow
@@ -79,7 +69,13 @@ func Init(win util.LimitedWindow) {
 	gear = pixel.NewSprite(pic, pic.Bounds())
 
 	scramble = util.Scramble()
-	fmt.Fprint(galder, scramble)
+	if config.GlobalConfig().ScrambleLength > 20 {
+		line1, line2 := splitScramble(scramble)
+		fmt.Fprint(galderLine1, line1)
+		fmt.Fprint(galderLine2, line2)
+	} else {
+		fmt.Fprint(galderLine1, scramble)
+	}
 
 	streamerMode = false
 	elapsed = 0
@@ -148,11 +144,18 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	mat = mat.Moved(pixel.V(bigSeven.Bounds().W()+30, 0))
 	smallSeven.Draw(canvas, mat)
 
-	mat = pixel.IM.Moved(galder.Bounds().Center().Scaled(-1)).Moved(pixel.V(win.Bounds().W()/2, win.Bounds().H()-45))
-	galder.Draw(canvas, mat)
+	mat = pixel.IM.Moved(galderLine1.Bounds().Center().Scaled(-1)).Moved(pixel.V(win.Bounds().W()/2, win.Bounds().H()-45))
+	if config.GlobalConfig().ScrambleLength > 20 {
+		mat = mat.Moved(pixel.V(0, 20))
+		galderLine1.Draw(canvas, mat)
+		mat = pixel.IM.Moved(galderLine2.Bounds().Center().Scaled(-1)).Moved(pixel.V(win.Bounds().W()/2, win.Bounds().H()-45)).Moved(pixel.V(0, -18))
+		galderLine2.Draw(canvas, mat)
+	} else {
+		galderLine1.Draw(canvas, mat)
+	}
 
 	if !streamerMode && (currentState == stateDone || currentState == stateWaitingForHold) {
-		upperRight := pixel.V(canvas.Bounds().W()-25, canvas.Bounds().H()-25)
+		upperRight := pixel.V(canvas.Bounds().W()-25, 25)
 		mat = pixel.IM.Moved(upperRight)
 		gear.Draw(canvas, mat)
 		if win.JustPressed(pixelgl.MouseButtonLeft) {
@@ -204,8 +207,15 @@ func checkTriggerUp(win util.LimitedWindow, t string) (fired bool) {
 func reset() {
 	elapsed = 0
 	scramble = util.Scramble()
-	galder.Clear()
-	fmt.Fprint(galder, scramble)
+	galderLine1.Clear()
+	galderLine2.Clear()
+	if config.GlobalConfig().ScrambleLength > 20 {
+		line1, line2 := splitScramble(scramble)
+		fmt.Fprint(galderLine1, line1)
+		fmt.Fprint(galderLine2, line2)
+	} else {
+		fmt.Fprint(galderLine1, scramble)
+	}
 	currentState = stateWaitingForHold
 	lastStateChange = time.Now()
 }
@@ -248,4 +258,19 @@ func immediatePill(imd *imdraw.IMDraw, win util.LimitedWindow) {
 	pt.X += 200
 	imd.Push(pt)
 	imd.Circle(25, 0)
+}
+
+func splitScramble(scramble string) (line1 string, line2 string) {
+	split := -1
+	count := 0
+	for i, r := range scramble {
+		if r == ' ' {
+			if count == config.GlobalConfig().ScrambleLength/2 {
+				split = i
+				break
+			}
+			count++
+		}
+	}
+	return scramble[:split], scramble[split+1:]
 }
