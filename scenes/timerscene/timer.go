@@ -46,7 +46,7 @@ var gear *pixel.Sprite
 func Init(win util.LimitedWindow) {
 	bigSevenAtlas := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 200)
 	smallSevenAtlas := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 100)
-	galderAtlas := util.LoadTTF("assets/galderglynn titling rg.ttf", 32)
+	galderAtlas := util.LoadTTF("assets/galderglynn titling rg.ttf", 30)
 
 	bigSeven = text.New(pixel.V(0, 0), bigSevenAtlas)
 	smallSeven = text.New(pixel.V(0, 0), smallSevenAtlas)
@@ -158,14 +158,10 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 		upperRight := pixel.V(canvas.Bounds().W()-25, 25)
 		mat = pixel.IM.Moved(upperRight)
 		gear.Draw(canvas, mat)
-		if win.JustPressed(pixelgl.MouseButtonLeft) {
-			mat = mat.Moved(gear.Frame().Center().Scaled(-1))
-			pt := mat.Unproject(win.MousePosition())
-			if gear.Frame().Contains(pt) {
-				reset()
-				change = new(scenes.SceneType)
-				*change = scenes.SettingsScene
-			}
+		if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(mat, gear.Frame(), win.MousePosition()) {
+			reset()
+			change = new(scenes.SceneType)
+			*change = scenes.SettingsScene
 		}
 	}
 	return change
