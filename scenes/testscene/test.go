@@ -23,6 +23,9 @@ func Init(win util.LimitedWindow) {
 	gear = pixel.NewSprite(pic, pic.Bounds())
 }
 
+// OnShow has some last minute prep for showing a scene
+func OnShow() {}
+
 // Draw updates and renders the Test scene
 func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (change *scenes.SceneType) {
 	canvas.Clear(colornames.Black)

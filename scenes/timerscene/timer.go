@@ -2,6 +2,7 @@ package timerscene
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/coreyog/rubikstimer/config"
@@ -68,18 +69,20 @@ func Init(win util.LimitedWindow) {
 
 	gear = pixel.NewSprite(pic, pic.Bounds())
 
-	scramble = util.Scramble()
-	if config.GlobalConfig().ScrambleLength > 20 {
-		line1, line2 := splitScramble(scramble)
-		fmt.Fprint(galderLine1, line1)
-		fmt.Fprint(galderLine2, line2)
-	} else {
-		fmt.Fprint(galderLine1, scramble)
-	}
+	doScramble()
 
 	streamerMode = false
 	elapsed = 0
 	lastStateChange = time.Now()
+}
+
+// OnShow has some last minute prep for showing a scene
+func OnShow() {
+	elapsed = 0
+	currentState = stateWaitingForHold
+	if len(strings.Split(scramble, " ")) != config.GlobalConfig().ScrambleLength {
+		doScramble()
+	}
 }
 
 // Draw updates and renders the Timer scene
@@ -102,6 +105,9 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 		if time.Since(lastStateChange).Seconds() > 0.5 && checkTriggerDown(win, config.GlobalConfig().TimerStartTrigger) {
 			currentState = stateWaitingForRelease
 			lastStateChange = time.Now()
+		}
+		if config.GlobalConfig().TimerStartTrigger != string(config.TriggerAny) && win.JustPressed(pixelgl.KeyR) {
+			doScramble()
 		}
 		break
 	case stateWaitingForRelease:
@@ -145,7 +151,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	smallSeven.Draw(canvas, mat)
 
 	mat = pixel.IM.Moved(galderLine1.Bounds().Center().Scaled(-1)).Moved(pixel.V(win.Bounds().W()/2, win.Bounds().H()-45))
-	if config.GlobalConfig().ScrambleLength > 20 {
+	if config.GlobalConfig().ScrambleLength > 15 {
 		mat = mat.Moved(pixel.V(0, 20))
 		galderLine1.Draw(canvas, mat)
 		mat = pixel.IM.Moved(galderLine2.Bounds().Center().Scaled(-1)).Moved(pixel.V(win.Bounds().W()/2, win.Bounds().H()-45)).Moved(pixel.V(0, -18))
@@ -155,11 +161,11 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	}
 
 	if !streamerMode && (currentState == stateDone || currentState == stateWaitingForHold) {
-		upperRight := pixel.V(canvas.Bounds().W()-25, 25)
-		mat = pixel.IM.Moved(upperRight)
+		mat = pixel.IM.Moved(pixel.V(canvas.Bounds().W(), 0)).Moved(pixel.V(-25, 25))
 		gear.Draw(canvas, mat)
-		if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(mat, gear.Frame(), win.MousePosition()) {
-			reset()
+		halfX := gear.Frame().W() / 2
+		halfY := gear.Frame().H() / 2
+		if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(mat, pixel.R(-halfX, -halfY, halfX, halfY), win.MousePosition()) {
 			change = new(scenes.SceneType)
 			*change = scenes.SettingsScene
 		}
@@ -202,16 +208,7 @@ func checkTriggerUp(win util.LimitedWindow, t string) (fired bool) {
 
 func reset() {
 	elapsed = 0
-	scramble = util.Scramble()
-	galderLine1.Clear()
-	galderLine2.Clear()
-	if config.GlobalConfig().ScrambleLength > 20 {
-		line1, line2 := splitScramble(scramble)
-		fmt.Fprint(galderLine1, line1)
-		fmt.Fprint(galderLine2, line2)
-	} else {
-		fmt.Fprint(galderLine1, scramble)
-	}
+	doScramble()
 	currentState = stateWaitingForHold
 	lastStateChange = time.Now()
 }
@@ -256,16 +253,32 @@ func immediatePill(imd *imdraw.IMDraw, win util.LimitedWindow) {
 	imd.Circle(25, 0)
 }
 
+func doScramble() {
+	scramble = util.Scramble()
+	galderLine1.Clear()
+	galderLine2.Clear()
+	if config.GlobalConfig().ScrambleLength > 15 {
+		line1, line2 := splitScramble(scramble)
+		fmt.Fprint(galderLine1, line1)
+		fmt.Fprint(galderLine2, line2)
+	} else {
+		fmt.Fprint(galderLine1, scramble)
+	}
+}
+
 func splitScramble(scramble string) (line1 string, line2 string) {
 	split := -1
-	count := 0
+	count := config.GlobalConfig().ScrambleLength / 2
+	if config.GlobalConfig().ScrambleLength%2 == 0 {
+		count--
+	}
 	for i, r := range scramble {
 		if r == ' ' {
-			if count == config.GlobalConfig().ScrambleLength/2 {
+			if count == 0 {
 				split = i
 				break
 			}
-			count++
+			count--
 		}
 	}
 	return scramble[:split], scramble[split+1:]

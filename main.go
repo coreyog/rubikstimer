@@ -112,10 +112,10 @@ func run() {
 				mousePos = win.MousePosition()
 				mouseDown = true
 			}
+		}
 
-			if win.Pressed(pixelgl.KeyEscape) {
-				win.SetClosed(true)
-			}
+		if win.Pressed(pixelgl.KeyEscape) {
+			win.SetClosed(true)
 		}
 
 		var changeScene *scenes.SceneType
@@ -133,6 +133,17 @@ func run() {
 		canvas.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
 		if changeScene != nil {
 			currentScene = *changeScene
+			switch currentScene {
+			case scenes.TimerScene:
+				timerscene.OnShow()
+				break
+			case scenes.SettingsScene:
+				settingsscene.OnShow()
+				break
+			case scenes.TestScene:
+				testscene.OnShow()
+				break
+			}
 		}
 
 		win.Update()

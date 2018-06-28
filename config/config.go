@@ -53,6 +53,19 @@ func LoadConfig() {
 	globalConfig = config
 }
 
+// SaveConfig writes config to file and sets it as the global config for immediate use
+func SaveConfig(config Config) {
+	raw, err := json.MarshalIndent(config, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	err = ioutil.WriteFile("config.json", raw, 0666)
+	if err != nil {
+		panic(err)
+	}
+	globalConfig = config
+}
+
 // GlobalConfig gives access to a
 func GlobalConfig() Config {
 	return globalConfig
