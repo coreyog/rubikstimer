@@ -21,9 +21,6 @@ func Scramble() string {
 	axam := []int{0, 0, 0}
 	la := -1
 	for len(seq) < seqlen {
-		if len(seq) == 21 {
-			// fmt.Println("DEBUG")
-		}
 		// choose a different axis than previous one
 		ax := int(math.Floor(rand.Float64() * 3))
 		for ax == la {

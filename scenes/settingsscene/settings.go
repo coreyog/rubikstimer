@@ -52,6 +52,7 @@ var rightScrambleArrowRect pixel.Rect
 
 var leftScramblePt pixel.Vec
 var lastScrambleAdjust time.Time
+var indicatorGrab bool
 
 var triggerOrder = []string{string(config.TriggerControls), string(config.TriggerSpacebar), string(config.TriggerAny)}
 var labelOrder []*text.Text
@@ -63,6 +64,7 @@ var tempConfig config.Config
 // Init creates the resources for the Timer scene
 func Init(win util.LimitedWindow) {
 	tempConfig = config.GlobalConfig()
+	indicatorGrab = false
 
 	galderHeaderAtlas := util.LoadTTF("assets/galderglynn titling rg.ttf", 32)
 	galderAtlas := util.LoadTTF("assets/galderglynn titling rg.ttf", 18)
@@ -95,7 +97,6 @@ func Init(win util.LimitedWindow) {
 	saveMatrix = pixel.IM.Moved(pixel.V(win.Bounds().W(), 0)).Moved(saveBtn.Bounds().Center().ScaledXY(pixel.V(-1.5, -1))).Moved(pixel.V(-45, 45))
 	saveBox.SetMatrix(saveMatrix)
 	saveRect = boxText(saveBtn, saveBox)
-	fmt.Println(saveRect)
 
 	cancelBtn = text.New(pixel.ZV, galderHeaderAtlas)
 	fmt.Fprint(cancelBtn, "Cancel")
@@ -152,12 +153,15 @@ func OnShow() {
 	tempConfig = config.GlobalConfig()
 	startTriggerIndex = util.IndexOfString(triggerOrder, tempConfig.TimerStartTrigger)
 	endTriggerIndex = util.IndexOfString(triggerOrder, tempConfig.TimerEndTrigger)
+	indicatorGrab = false
 }
 
 // Draw updates and renders the Timer scene
 func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (change *scenes.SceneType) {
 	canvas.Clear(colornames.Black)
-
+	if !win.Pressed(pixelgl.MouseButtonLeft) {
+		indicatorGrab = false
+	}
 	cB := canvas.Bounds()
 	// StartTriggerLabel
 	mat := pixel.IM.Moved(startTrigger.Bounds().Center().Scaled(-1)).Moved(pixel.V(cB.W()/4, cB.H()*3/4))
@@ -204,19 +208,29 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 
 	indicator := imdraw.New(nil)
 	pt := leftScramblePt.Add(pixel.V(float64(tempConfig.ScrambleLength-10)*7.5, 0))
-	buildIndicator(pt, indicator)
+	if indicatorGrab && win.Pressed(pixelgl.MouseButtonLeft) {
+		pt.X = math.Max(leftScramblePt.X, win.MousePosition().X)
+		pt.X = math.Min(leftScramblePt.X+300, pt.X)
+		offX := int((pt.X-leftScramblePt.X)/7.5 + 10)
+		tempConfig.ScrambleLength = offX
+	}
+	indBox := buildIndicator(pt, indicator)
 	indicator.Draw(canvas)
+
+	if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(pixel.IM.Moved(pt), indBox, win.MousePosition()) {
+		indicatorGrab = true
+	}
 
 	scrambleNum.Clear()
 	fmt.Fprint(scrambleNum, tempConfig.ScrambleLength)
 	mat = pixel.IM.Moved(pt).Moved(pixel.V(0, -40)).Moved(scrambleNum.Bounds().Center().Scaled(-1))
 	scrambleNum.Draw(canvas, mat)
 
-	if win.Pressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(leftScrambleArrowRect, win.MousePosition()) && time.Since(lastScrambleAdjust).Seconds() > 0.15 {
+	if !indicatorGrab && win.Pressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(leftScrambleArrowRect, win.MousePosition()) && time.Since(lastScrambleAdjust).Seconds() > 0.15 {
 		tempConfig.ScrambleLength = int(math.Max(10, float64(tempConfig.ScrambleLength)-1))
 		lastScrambleAdjust = time.Now()
 	}
-	if win.Pressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(rightScrambleArrowRect, win.MousePosition()) && time.Since(lastScrambleAdjust).Seconds() > 0.15 {
+	if !indicatorGrab && win.Pressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(rightScrambleArrowRect, win.MousePosition()) && time.Since(lastScrambleAdjust).Seconds() > 0.15 {
 		tempConfig.ScrambleLength = int(math.Min(50, float64(tempConfig.ScrambleLength)+1))
 		lastScrambleAdjust = time.Now()
 	}
@@ -224,7 +238,8 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	saveBtn.Draw(canvas, saveMatrix)
 	saveBox.Draw(canvas)
 	if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(saveMatrix, saveRect, win.MousePosition()) {
-		fmt.Println("SAVE")
+		tempConfig.TimerStartTrigger = triggerOrder[startTriggerIndex]
+		tempConfig.TimerEndTrigger = triggerOrder[endTriggerIndex]
 		config.SaveConfig(tempConfig)
 		change = new(scenes.SceneType)
 		*change = scenes.TimerScene
@@ -233,7 +248,6 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	cancelBtn.Draw(canvas, cancelMatrix)
 	cancelBox.Draw(canvas)
 	if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(cancelMatrix, cancelRect, win.MousePosition()) {
-		fmt.Println("CANCEL")
 		change = new(scenes.SceneType)
 		*change = scenes.TimerScene
 	}
@@ -272,13 +286,14 @@ func buildTickMarks(pt pixel.Vec, imd *imdraw.IMDraw) {
 	}
 }
 
-func buildIndicator(pt pixel.Vec, imd *imdraw.IMDraw) {
+func buildIndicator(pt pixel.Vec, imd *imdraw.IMDraw) pixel.Rect {
 	imd.Color = colornames.White
 
 	imd.SetMatrix(pixel.IM.Moved(pt))
 
 	imd.Push(pixel.V(-5, 25), pixel.V(5, -25))
 	imd.Rectangle(0)
+	return pixel.R(-5, -25, 5, 25)
 }
 
 func boxText(tx *text.Text, imd *imdraw.IMDraw) (box pixel.Rect) {

@@ -11,7 +11,6 @@ import (
 	"github.com/coreyog/rubikstimer/config"
 	"github.com/coreyog/rubikstimer/scenes"
 	"github.com/coreyog/rubikstimer/scenes/settingsscene"
-	"github.com/coreyog/rubikstimer/scenes/testscene"
 	"github.com/coreyog/rubikstimer/scenes/timerscene"
 	"github.com/coreyog/rubikstimer/util"
 
@@ -86,7 +85,6 @@ func run() {
 	fps := time.NewTicker(time.Second / time.Duration(refreshRate))
 
 	timerscene.Init(win)
-	testscene.Init(win)
 	settingsscene.Init(win)
 
 	for !win.Closed() {
@@ -125,8 +123,6 @@ func run() {
 			break
 		case scenes.SettingsScene:
 			changeScene = settingsscene.Draw(canvas, win, dt)
-		case scenes.TestScene:
-			changeScene = testscene.Draw(canvas, win, dt)
 			break
 		}
 
@@ -139,9 +135,6 @@ func run() {
 				break
 			case scenes.SettingsScene:
 				settingsscene.OnShow()
-				break
-			case scenes.TestScene:
-				testscene.OnShow()
 				break
 			}
 		}

@@ -7,5 +7,4 @@ type SceneType int
 const (
 	TimerScene SceneType = iota
 	SettingsScene
-	TestScene
 )
