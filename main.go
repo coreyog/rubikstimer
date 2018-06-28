@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/coreyog/rubikstimer/config"
 	"github.com/coreyog/rubikstimer/scenes"
 	"github.com/coreyog/rubikstimer/scenes/settingsscene"
 	"github.com/coreyog/rubikstimer/scenes/testscene"
@@ -23,6 +24,7 @@ var currentScene scenes.SceneType
 
 func main() {
 	rand.Seed(time.Now().Unix())
+	config.LoadConfig()
 
 	help := []string{"-H", "--HELP", "/?", "HELP", "H"}
 	undec := []string{"-U", "--U", "--UNDECORATED"}

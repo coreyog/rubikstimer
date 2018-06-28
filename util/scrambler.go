@@ -5,13 +5,13 @@ package util
 import (
 	"math"
 	"math/rand"
-)
 
-// Default settings
-var seqlen = 20
+	"github.com/coreyog/rubikstimer/config"
+)
 
 // Scramble returns a scramble string
 func Scramble() string {
+	seqlen := config.GlobalConfig().ScrambleLength
 	var seq = []int{} // move sequences
 	//tl=number of allowed moves (twistable layers) on axis -- middle layer ignored
 	tl := 2 // size - 1 but size is always 3

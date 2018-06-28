@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coreyog/rubikstimer/config"
 	"github.com/coreyog/rubikstimer/scenes"
 	"github.com/coreyog/rubikstimer/util"
 
@@ -28,6 +29,7 @@ type state int
 var elapsed float64
 var startTime time.Time
 var scramble string
+var lastStateChange time.Time
 
 const (
 	stateWaitingForHold state = iota
@@ -81,6 +83,7 @@ func Init(win util.LimitedWindow) {
 
 	streamerMode = false
 	elapsed = 0
+	lastStateChange = time.Now()
 }
 
 // Draw updates and renders the Timer scene
@@ -95,33 +98,38 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 		streamerMode = !streamerMode
 	}
 
+	// half second delay added after state change for situations like
+	// using "any" to start the timer but pressing R to restart will count
 	switch currentState {
 	case stateWaitingForHold:
 		yellowIndicator.Draw(canvas)
-		if win.Pressed(pixelgl.KeyLeftControl) && win.Pressed(pixelgl.KeyRightControl) {
+		if time.Since(lastStateChange).Seconds() > 0.5 && checkTriggerDown(win, config.GlobalConfig().TimerStartTrigger) {
 			currentState = stateWaitingForRelease
+			lastStateChange = time.Now()
 		}
 		break
 	case stateWaitingForRelease:
 		if blink(dt) {
 			yellowIndicator.Draw(canvas)
 		}
-		if !win.Pressed(pixelgl.KeyLeftControl) || !win.Pressed(pixelgl.KeyRightControl) {
+		if checkTriggerUp(win, config.GlobalConfig().TimerStartTrigger) {
 			currentState = stateRunning
 			startTime = time.Now()
+			lastStateChange = time.Now()
 		}
 		break
 	case stateRunning:
 		elapsed = time.Since(startTime).Seconds()
 		greenIndicator.Draw(canvas)
-		if win.Pressed(pixelgl.KeyLeftControl) && win.Pressed(pixelgl.KeyRightControl) {
+		if time.Since(lastStateChange).Seconds() > 0.5 && checkTriggerDown(win, config.GlobalConfig().TimerEndTrigger) {
 			currentState = stateDone
+			lastStateChange = time.Now()
 		}
 	case stateDone:
 		if blink(dt) {
 			greenIndicator.Draw(canvas)
 		}
-		if win.Pressed(pixelgl.KeyR) {
+		if time.Since(lastStateChange).Seconds() > 0.5 && win.Pressed(pixelgl.KeyR) {
 			reset()
 		}
 	}
@@ -160,12 +168,46 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	return change
 }
 
+func checkTriggerDown(win util.LimitedWindow, t string) (fired bool) {
+	switch config.Trigger(t) {
+	case config.TriggerControls:
+		return win.Pressed(pixelgl.KeyLeftControl) && win.Pressed(pixelgl.KeyRightControl)
+	case config.TriggerSpacebar:
+		return win.Pressed(pixelgl.KeySpace)
+	case config.TriggerAny:
+		for k := int(pixelgl.KeySpace); k < int(pixelgl.KeyLast); k++ {
+			if win.Pressed(pixelgl.Button(k)) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func checkTriggerUp(win util.LimitedWindow, t string) (fired bool) {
+	switch config.Trigger(t) {
+	case config.TriggerControls:
+		return !win.Pressed(pixelgl.KeyLeftControl) || !win.Pressed(pixelgl.KeyRightControl)
+	case config.TriggerSpacebar:
+		return !win.Pressed(pixelgl.KeySpace)
+	case config.TriggerAny:
+		for k := int(pixelgl.KeySpace); k < int(pixelgl.KeyLast); k++ {
+			if win.Pressed(pixelgl.Button(k)) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
 func reset() {
 	elapsed = 0
 	scramble = util.Scramble()
 	galder.Clear()
 	fmt.Fprint(galder, scramble)
 	currentState = stateWaitingForHold
+	lastStateChange = time.Now()
 }
 
 func buildTimer(t float64) (minsec string, milli string) {
