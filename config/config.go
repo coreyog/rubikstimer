@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -29,7 +29,7 @@ var globalConfig = defaultConfig()
 func LoadConfig() {
 	var config Config
 	globalConfig = defaultConfig()
-	raw, err := ioutil.ReadFile("config.json")
+	raw, err := os.ReadFile("config.json")
 	if err != nil {
 		return
 	}
@@ -59,10 +59,12 @@ func SaveConfig(config Config) {
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile("config.json", raw, 0666)
+
+	err = os.WriteFile("config.json", raw, 0666)
 	if err != nil {
 		panic(err)
 	}
+
 	globalConfig = config
 }
 

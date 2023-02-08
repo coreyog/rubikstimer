@@ -109,7 +109,6 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 		if config.GlobalConfig().TimerStartTrigger != string(config.TriggerAny) && win.JustPressed(pixelgl.KeyR) {
 			doScramble()
 		}
-		break
 	case stateWaitingForRelease:
 		if blink(dt) {
 			yellowIndicator.Draw(canvas)
@@ -119,7 +118,6 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 			startTime = time.Now()
 			lastStateChange = time.Now()
 		}
-		break
 	case stateRunning:
 		elapsed = time.Since(startTime).Seconds()
 		greenIndicator.Draw(canvas)

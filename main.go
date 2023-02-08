@@ -120,10 +120,8 @@ func run() {
 		switch currentScene {
 		case scenes.TimerScene:
 			changeScene = timerscene.Draw(canvas, win, dt)
-			break
 		case scenes.SettingsScene:
 			changeScene = settingsscene.Draw(canvas, win, dt)
-			break
 		}
 
 		canvas.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
@@ -132,10 +130,8 @@ func run() {
 			switch currentScene {
 			case scenes.TimerScene:
 				timerscene.OnShow()
-				break
 			case scenes.SettingsScene:
 				settingsscene.OnShow()
-				break
 			}
 		}
 

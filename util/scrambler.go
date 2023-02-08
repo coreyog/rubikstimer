@@ -18,7 +18,7 @@ func Scramble() string {
 
 	//set up bookkeeping
 	axsl := make([]int, tl)
-	axam := []int{0, 0, 0}
+	var axam []int
 	la := -1
 	for len(seq) < seqlen {
 		// choose a different axis than previous one
