@@ -62,7 +62,7 @@ var endTriggerIndex int
 var tempConfig *config.Config
 
 // Init creates the resources for the Timer scene
-func Init(win util.LimitedWindow) {
+func Init(win *util.GameWindow) {
 	tempConfig = config.GlobalConfig()
 	indicatorGrab = false
 
@@ -157,7 +157,7 @@ func OnShow() {
 }
 
 // Draw updates and renders the Timer scene
-func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (change *scenes.SceneType) {
+func Draw(canvas *pixelgl.Canvas, win *util.GameWindow, dt *util.DeltaTimer) (change *scenes.SceneType) {
 	canvas.Clear(colornames.Black)
 
 	if !win.Pressed(pixelgl.MouseButtonLeft) {

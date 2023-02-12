@@ -45,7 +45,7 @@ func run() {
 		Bounds:      pixel.R(0, 0, 1000, 400),
 		VSync:       true,
 		Undecorated: args.Undecorated,
-		Resizable:   false, // TODO: Make this true
+		Resizable:   true,
 	}
 
 	win, err := pixelgl.NewWindow(cfg)
@@ -64,11 +64,14 @@ func run() {
 
 	mouseDown := false
 
-	timerscene.Init(win)
-	settingsscene.Init(win)
+	game := util.NewGameWindowWithCanvas(win, canvas)
+
+	timerscene.Init(game)
+	settingsscene.Init(game)
 
 	for !win.Closed() {
 		dt.Tick()
+		game.ResizeAdjust()
 
 		if undecorated {
 			if mouseDown {
@@ -100,12 +103,14 @@ func run() {
 		var changeScene *scenes.SceneType
 		switch currentScene {
 		case scenes.TimerScene:
-			changeScene = timerscene.Draw(canvas, win, dt)
+			changeScene = timerscene.Draw(canvas, game, dt)
 		case scenes.SettingsScene:
-			changeScene = settingsscene.Draw(canvas, win, dt)
+			changeScene = settingsscene.Draw(canvas, game, dt)
 		}
 
-		canvas.Draw(win, pixel.IM.Moved(win.Bounds().Center()))
+		// game.DrawMouse() // useful
+
+		game.Draw()
 		if changeScene != nil {
 			currentScene = *changeScene
 			switch currentScene {

@@ -44,7 +44,7 @@ var currentState = stateWaitingForHold
 var gear *pixel.Sprite
 
 // Init creates the resources for the Timer scene
-func Init(win util.LimitedWindow) {
+func Init(win *util.GameWindow) {
 	bigSevenAtlas := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 200)
 	smallSevenAtlas := util.LoadTTF("assets/DSEG7Modern-Bold.ttf", 100)
 	galderAtlas := util.LoadTTF("assets/galderglynn titling rg.ttf", 30)
@@ -87,7 +87,7 @@ func OnShow() {
 }
 
 // Draw updates and renders the Timer scene
-func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (change *scenes.SceneType) {
+func Draw(canvas *pixelgl.Canvas, win *util.GameWindow, dt *util.DeltaTimer) (change *scenes.SceneType) {
 	if streamerMode {
 		canvas.Clear(colornames.Magenta)
 	} else {
@@ -95,6 +95,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	}
 
 	if win.JustPressed(pixelgl.KeyF12) {
+		// shhhh
 		streamerMode = !streamerMode
 	}
 
@@ -177,7 +178,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	return change
 }
 
-func checkTriggerDown(win util.LimitedWindow, t string) (fired bool) {
+func checkTriggerDown(win *util.GameWindow, t string) (fired bool) {
 	switch config.Trigger(t) {
 	case config.TriggerModifiers:
 		return isLeftModifierPressed(win) && isRightModifierPressed(win)
@@ -193,15 +194,15 @@ func checkTriggerDown(win util.LimitedWindow, t string) (fired bool) {
 	return false
 }
 
-func isLeftModifierPressed(win util.LimitedWindow) bool {
+func isLeftModifierPressed(win *util.GameWindow) bool {
 	return win.Pressed(pixelgl.KeyLeftShift) || win.Pressed(pixelgl.KeyLeftControl) || win.Pressed(pixelgl.KeyLeftSuper) || win.Pressed(pixelgl.KeyLeftAlt)
 }
 
-func isRightModifierPressed(win util.LimitedWindow) bool {
+func isRightModifierPressed(win *util.GameWindow) bool {
 	return win.Pressed(pixelgl.KeyRightShift) || win.Pressed(pixelgl.KeyRightControl) || win.Pressed(pixelgl.KeyRightSuper) || win.Pressed(pixelgl.KeyRightAlt)
 }
 
-func checkTriggerUp(win util.LimitedWindow, t string) (fired bool) {
+func checkTriggerUp(win *util.GameWindow, t string) (fired bool) {
 	switch config.Trigger(t) {
 	case config.TriggerModifiers:
 		return !isLeftModifierPressed(win) || !isRightModifierPressed(win)
@@ -239,7 +240,7 @@ func blink(dt *util.DeltaTimer) bool {
 	return (int(dt.TotalTime()*1000)/550)%2 == 1
 }
 
-func immediatePill(imd *imdraw.IMDraw, win util.LimitedWindow) {
+func immediatePill(imd *imdraw.IMDraw, win *util.GameWindow) {
 	pt := win.Bounds().Center()
 	pt.Y -= 150
 
