@@ -1,6 +1,8 @@
 package util
 
 import (
+	"fmt"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
@@ -50,6 +52,7 @@ func (win *GameWindow) Draw() {
 		// has the window been resized? adjust the canvas<=>window mapper
 		// as well as current winBounds
 		win.winBounds = &wBounds
+		fmt.Printf("window resized: %d, %d\n", int(wBounds.W()), int(wBounds.H()))
 		win.mapper = BuildMapper(*win.canvasBounds, wBounds)
 	}
 
