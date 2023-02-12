@@ -109,3 +109,5 @@ $RECYCLE.BIN/
 config.json
 rubikstimer
 !rubikstimer/
+
+dist/
