@@ -40,15 +40,17 @@ func main() {
 }
 
 func run() {
-	cfg := pixelgl.WindowConfig{
+	cfg := config.GlobalConfig()
+
+	pixelCfg := pixelgl.WindowConfig{
 		Title:       "Rubik's Timer",
-		Bounds:      pixel.R(0, 0, 1000, 400),
+		Bounds:      pixel.R(0, 0, float64(cfg.WindowWidth), float64(cfg.WindowHeight)),
 		VSync:       true,
 		Undecorated: args.Undecorated,
 		Resizable:   true,
 	}
 
-	win, err := pixelgl.NewWindow(cfg)
+	win, err := pixelgl.NewWindow(pixelCfg)
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +73,6 @@ func run() {
 
 	for !win.Closed() {
 		dt.Tick()
-		game.ResizeAdjust()
 
 		if undecorated {
 			if mouseDown {

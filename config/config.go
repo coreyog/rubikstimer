@@ -2,9 +2,9 @@ package config
 
 import (
 	"encoding/json"
-	"math"
 	"os"
-	"strings"
+
+	"gopkg.in/validator.v2"
 )
 
 // Trigger is used for indicating how to start and stop the timer
@@ -17,9 +17,11 @@ const (
 )
 
 type Config struct {
-	ScrambleLength    int    `json:"scrambleLength"`
-	TimerStartTrigger string `json:"timerStartTrigger"`
-	TimerEndTrigger   string `json:"timerEndTrigger"`
+	ScrambleLength    int    `json:"scrambleLength" validate:"min=10,max=50"`
+	TimerStartTrigger string `json:"timerStartTrigger" validate:"oneof=modifiers spacebar any"`
+	TimerEndTrigger   string `json:"timerEndTrigger" validate:"oneof=modifiers spacebar any"`
+	WindowWidth       int    `json:"windowWidth" validate:"min=100,max=10000"`
+	WindowHeight      int    `json:"windowHeight" validate:"min=100,max=10000"`
 }
 
 var globalConfig = defaultConfig()
@@ -38,13 +40,16 @@ func LoadConfig() {
 		return
 	}
 
-	config.ScrambleLength = int(math.Max(10, math.Min(float64(config.ScrambleLength), 50)))
+	resave := false
 
-	resave1 := checkTrigger(&config.TimerStartTrigger)
+	err = validator.Validate(config)
+	if err != nil {
+		// something in the config isn't kosher, so we'll just use the defaults
+		config = defaultConfig()
+		resave = true
+	}
 
-	resave2 := checkTrigger(&config.TimerEndTrigger)
-
-	if resave1 || resave2 {
+	if resave {
 		SaveConfig(config)
 	}
 
@@ -76,21 +81,7 @@ func defaultConfig() (config *Config) {
 		ScrambleLength:    20,
 		TimerStartTrigger: string(TriggerModifiers),
 		TimerEndTrigger:   string(TriggerModifiers),
+		WindowWidth:       1000,
+		WindowHeight:      400,
 	}
-}
-
-func checkTrigger(t *string) (resave bool) {
-	*t = strings.ToLower(*t)
-	if *t == "controls" {
-		// temporary fix for loading old configs correctly
-		*t = string(TriggerModifiers)
-		resave = true
-	}
-
-	// if invalid, revert to default values
-	if *t == string(TriggerAny) || *t == string(TriggerModifiers) || *t == string(TriggerSpacebar) {
-		*t = string(TriggerModifiers)
-	}
-
-	return resave
 }

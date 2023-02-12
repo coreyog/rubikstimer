@@ -2,4 +2,6 @@
   "scrambleLength": 20,
   "timerStartTrigger": "modifiers",
   "timerEndTrigger": "modifiers"
+  "windowWidth": 1000,
+  "windowHeight": 400
 }

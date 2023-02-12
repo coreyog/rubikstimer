@@ -26,16 +26,6 @@ func NewGameWindowWithCanvas(win *pixelgl.Window, buffer *pixelgl.Canvas) *GameW
 	}
 }
 
-func (win *GameWindow) ResizeAdjust() {
-	wBounds := win.window.Bounds()
-	if *win.winBounds != wBounds {
-		// has the window been resized? adjust the canvas<=>window mapper
-		// as well as current winBounds
-		win.winBounds = &wBounds
-		win.mapper = BuildMapper(*win.canvasBounds, wBounds)
-	}
-}
-
 func (win *GameWindow) JustPressed(button pixelgl.Button) bool {
 	return win.window.JustPressed(button)
 }
@@ -55,6 +45,14 @@ func (win *GameWindow) MousePosition() pixel.Vec {
 }
 
 func (win *GameWindow) Draw() {
+	wBounds := win.window.Bounds()
+	if *win.winBounds != wBounds {
+		// has the window been resized? adjust the canvas<=>window mapper
+		// as well as current winBounds
+		win.winBounds = &wBounds
+		win.mapper = BuildMapper(*win.canvasBounds, wBounds)
+	}
+
 	win.canvas.Draw(win.window, win.mapper)
 }
 
