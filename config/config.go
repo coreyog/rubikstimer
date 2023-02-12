@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"math"
 	"os"
 	"strings"
 )
@@ -9,14 +10,12 @@ import (
 // Trigger is used for indicating how to start and stop the timer
 type Trigger string
 
-// Trigger strings
 const (
-	TriggerControls Trigger = "controls"
-	TriggerSpacebar Trigger = "spacebar"
-	TriggerAny      Trigger = "any"
+	TriggerModifiers Trigger = "modifiers"
+	TriggerSpacebar  Trigger = "spacebar"
+	TriggerAny       Trigger = "any"
 )
 
-// Config holds options that can be set
 type Config struct {
 	ScrambleLength    int    `json:"scrambleLength"`
 	TimerStartTrigger string `json:"timerStartTrigger"`
@@ -27,34 +26,33 @@ var globalConfig = defaultConfig()
 
 // LoadConfig reads and parses a config file
 func LoadConfig() {
-	var config Config
-	globalConfig = defaultConfig()
+	config := defaultConfig()
+
 	raw, err := os.ReadFile("config.json")
 	if err != nil {
 		return
 	}
+
 	err = json.Unmarshal(raw, &config)
 	if err != nil {
 		return
 	}
 
-	if config.ScrambleLength < 10 {
-		config.ScrambleLength = 10
-	} else if config.ScrambleLength > 50 {
-		config.ScrambleLength = 50
-	}
-	if !checkTrigger(config.TimerStartTrigger) {
-		config.TimerStartTrigger = defaultConfig().TimerStartTrigger
-	}
-	if !checkTrigger(config.TimerEndTrigger) {
-		config.TimerEndTrigger = defaultConfig().TimerEndTrigger
+	config.ScrambleLength = int(math.Max(10, math.Min(float64(config.ScrambleLength), 50)))
+
+	resave1 := checkTrigger(&config.TimerStartTrigger)
+
+	resave2 := checkTrigger(&config.TimerEndTrigger)
+
+	if resave1 || resave2 {
+		SaveConfig(config)
 	}
 
 	globalConfig = config
 }
 
 // SaveConfig writes config to file and sets it as the global config for immediate use
-func SaveConfig(config Config) {
+func SaveConfig(config *Config) {
 	raw, err := json.MarshalIndent(config, "", "\t")
 	if err != nil {
 		panic(err)
@@ -69,18 +67,30 @@ func SaveConfig(config Config) {
 }
 
 // GlobalConfig gives access to a
-func GlobalConfig() Config {
+func GlobalConfig() *Config {
 	return globalConfig
 }
 
-func defaultConfig() (config Config) {
-	config.ScrambleLength = 20
-	config.TimerStartTrigger = string(TriggerControls)
-	config.TimerEndTrigger = string(TriggerControls)
-	return config
+func defaultConfig() (config *Config) {
+	return &Config{
+		ScrambleLength:    20,
+		TimerStartTrigger: string(TriggerModifiers),
+		TimerEndTrigger:   string(TriggerModifiers),
+	}
 }
 
-func checkTrigger(t string) (isAllowed bool) {
-	t = strings.ToLower(t)
-	return t == string(TriggerAny) || t == string(TriggerControls) || t == string(TriggerSpacebar)
+func checkTrigger(t *string) (resave bool) {
+	*t = strings.ToLower(*t)
+	if *t == "controls" {
+		// temporary fix for loading old configs correctly
+		*t = string(TriggerModifiers)
+		resave = true
+	}
+
+	// if invalid, revert to default values
+	if *t == string(TriggerAny) || *t == string(TriggerModifiers) || *t == string(TriggerSpacebar) {
+		*t = string(TriggerModifiers)
+	}
+
+	return resave
 }

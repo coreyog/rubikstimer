@@ -1,12 +1,8 @@
-//go:generate go-bindata -o embedded/embedded.go -pkg embedded assets/...
 package main
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
-	"strings"
-	"time"
 
 	"github.com/coreyog/rubikstimer/config"
 	"github.com/coreyog/rubikstimer/scenes"
@@ -16,39 +12,26 @@ import (
 
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/jessevdk/go-flags"
 )
+
+type Arguments struct {
+	Undecorated bool `short:"u" long:"undecorated" description:"Run the program without a window border"`
+}
 
 var undecorated = false
 var currentScene scenes.SceneType
+var args *Arguments
 
 func main() {
-	rand.Seed(time.Now().Unix())
 	config.LoadConfig()
 
-	help := []string{"-H", "--HELP", "/?", "HELP", "H"}
-	undec := []string{"-U", "--U", "--UNDECORATED"}
-	showHelp := false
-	for _, arg := range os.Args {
-		upperArg := strings.ToUpper(arg)
-		for _, h := range help {
-			if upperArg == h {
-				showHelp = true
-				break
-			}
-		}
-		if !undecorated {
-			for _, u := range undec {
-				if upperArg == u {
-					undecorated = true
-					break
-				}
-			}
-		}
-	}
+	args = &Arguments{}
 
-	if showHelp {
-		printHelp()
-		return
+	_, err := flags.Parse(args)
+	if err != nil && !flags.WroteHelp(err) {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	currentScene = scenes.TimerScene
@@ -61,34 +44,30 @@ func run() {
 		Title:       "Rubik's Timer",
 		Bounds:      pixel.R(0, 0, 1000, 400),
 		VSync:       true,
-		Undecorated: undecorated,
-		Resizable:   false,
+		Undecorated: args.Undecorated,
+		Resizable:   false, // TODO: Make this true
 	}
+
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
 		panic(err)
 	}
+
 	win.SetSmooth(true)
 
 	canvas := pixelgl.NewCanvas(win.Bounds())
 	canvas.SetSmooth(true)
 
 	dt := util.NewDeltaTimer(0)
+
 	var mousePos pixel.Vec
+
 	mouseDown := false
-	refreshRate := float64(60)
-	if win.Monitor() != nil {
-		refreshRate = win.Monitor().RefreshRate()
-	} else if pixelgl.PrimaryMonitor() != nil {
-		refreshRate = pixelgl.PrimaryMonitor().RefreshRate()
-	}
-	fps := time.NewTicker(time.Second / time.Duration(refreshRate))
 
 	timerscene.Init(win)
 	settingsscene.Init(win)
 
 	for !win.Closed() {
-		<-fps.C
 		dt.Tick()
 
 		if undecorated {
@@ -96,8 +75,10 @@ func run() {
 				diff := win.MousePosition().Sub(mousePos)
 				if diff.X != 0 && diff.Y != 0 {
 					winPos := win.GetPos()
+
 					winPos.X += diff.X
 					winPos.Y -= diff.Y
+
 					win.SetPos(winPos)
 				}
 			}
@@ -137,17 +118,4 @@ func run() {
 
 		win.Update()
 	}
-}
-
-func printHelp() {
-	fmt.Println("RubiksTimer [-u|--undecorated]")
-	fmt.Println()
-	fmt.Println("Adding an undecorated flag will remove the border from the window.")
-	fmt.Println("Use Escape to close the program.")
-	fmt.Println()
-	fmt.Println("Hold both control keys on your keyboard to arm the timer.")
-	fmt.Println("The timer will start when you release either control key.")
-	fmt.Println("Press both control keys at the same time again to stop the timer.")
-	fmt.Println("Pressing R will restart the timer and wait for both controls to be pressed again.")
-	fmt.Println("F12 will flip between a Black and Magenta background (for use as a chroma key).")
 }

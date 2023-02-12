@@ -9,4 +9,6 @@ Press both control keys at the same time again to stop the timer.
 Pressing R will restart the timer and wait for both controls to be pressed again.
 F12 will flip between a Black and Magenta background (for use as a chroma key).
 
-Compile without command prompt window (i.e. double clicking an exe will only build a GUI window and not a console window): go build -ldflags -H=windowsgui main.go
+Compile without command prompt window (i.e. double clicking an exe will only
+build a GUI window and not a console window): go build -ldflags -H=windowsgui
+main.go

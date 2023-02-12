@@ -17,9 +17,12 @@ type DeltaTimer struct {
 
 // NewDeltaTimer starts a new DeltaTimer
 func NewDeltaTimer(fixedRate uint) (dt *DeltaTimer) {
-	dt = new(DeltaTimer)
-	dt.fixedRate = fixedRate
+	dt = &DeltaTimer{
+		fixedRate: fixedRate,
+	}
+
 	dt.start()
+
 	return dt
 }
 
@@ -33,6 +36,7 @@ func (dt *DeltaTimer) Tick() {
 	dt.tickCount++
 	if dt.fixedRate <= 0 {
 		now := time.Now()
+
 		dt.sinceLastFrame = now.Sub(dt.lastFrame).Seconds()
 		dt.totalTime = now.Sub(dt.startTime).Seconds()
 		dt.lastFrame = now

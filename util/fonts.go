@@ -14,6 +14,7 @@ func LoadTTF(path string, size float64) *text.Atlas {
 	if err != nil {
 		panic(err)
 	}
+
 	ttfont, err := truetype.Parse(rawFont)
 	if err != nil {
 		panic(err)
@@ -23,5 +24,6 @@ func LoadTTF(path string, size float64) *text.Atlas {
 		Size:    size,
 		Hinting: font.HintingFull,
 	})
+
 	return text.NewAtlas(fontface, text.ASCII)
 }

@@ -11,15 +11,18 @@ import (
 
 // Scramble returns a scramble string
 func Scramble() string {
-	seqlen := config.GlobalConfig().ScrambleLength
 	var seq = []int{} // move sequences
+
+	seqlen := config.GlobalConfig().ScrambleLength
+
 	//tl=number of allowed moves (twistable layers) on axis -- middle layer ignored
 	tl := 2 // size - 1 but size is always 3
 
 	//set up bookkeeping
-	axsl := make([]int, tl)
 	var axam []int
+	axsl := make([]int, tl)
 	la := -1
+
 	for len(seq) < seqlen {
 		// choose a different axis than previous one
 		ax := int(math.Floor(rand.Float64() * 3))
@@ -31,8 +34,10 @@ func Scramble() string {
 		for i := 0; i < tl; i++ {
 			axsl[i] = 0
 		}
+
 		axam = []int{0, 0, 0}
 		moved := 0
+
 		// generate moves on this axis
 		thirdProb := 0        // force it to work so this for acts as do...while
 		for thirdProb == 0 && // 2/3 prob for other axis next
@@ -43,6 +48,7 @@ func Scramble() string {
 			for axsl[sl] != 0 {
 				sl = int(math.Floor(rand.Float64() * float64(tl)))
 			}
+
 			// choose random amount
 			q := int(math.Floor(rand.Float64() * 3))
 			if tl != 3 || // odd cube always ok since middle layer is reference
@@ -52,6 +58,7 @@ func Scramble() string {
 				moved++
 				axsl[sl] = q + 1 // mark the slice has moved amount
 			}
+
 			thirdProb = int(math.Floor(rand.Float64() * 3))
 		}
 
@@ -67,13 +74,16 @@ func Scramble() string {
 					m = tl - 1 - m // slice number counting from that face
 					q = 2 - q      // opposite direction when looking at that face
 				}
+
 				// store move
 				seq = append(seq, (m*6+sa)*4+q)
 			}
 		}
+
 		// avoid this axis next time
 		la = ax
 	}
+
 	seq = append(seq, 0)
 
 	return scrambleString(seq)
@@ -82,16 +92,20 @@ func Scramble() string {
 func scrambleString(seq []int) string {
 	s := ""
 	j := 0
+
 	for i := 0; i < len(seq)-1; i++ {
 		if i != 0 {
 			s += " "
 		}
+
 		k := seq[i] >> 2
 		s += string("DLBURFdlburf"[k])
+
 		j = seq[i] & 3
 		if j != 0 {
 			s += string(" 2'"[j])
 		}
 	}
+
 	return s
 }

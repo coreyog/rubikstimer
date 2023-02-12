@@ -16,9 +16,11 @@ func LoadPicture(path string) (pixel.Picture, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	img, _, err := image.Decode(bytes.NewReader(file))
 	if err != nil {
 		return nil, err
 	}
+
 	return pixel.PictureDataFromImage(img), nil
 }

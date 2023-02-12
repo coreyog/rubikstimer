@@ -80,6 +80,7 @@ func Init(win util.LimitedWindow) {
 func OnShow() {
 	elapsed = 0
 	currentState = stateWaitingForHold
+
 	if len(strings.Split(scramble, " ")) != config.GlobalConfig().ScrambleLength {
 		doScramble()
 	}
@@ -106,6 +107,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 			currentState = stateWaitingForRelease
 			lastStateChange = time.Now()
 		}
+
 		if config.GlobalConfig().TimerStartTrigger != string(config.TriggerAny) && win.JustPressed(pixelgl.KeyR) {
 			doScramble()
 		}
@@ -113,6 +115,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 		if blink(dt) {
 			yellowIndicator.Draw(canvas)
 		}
+
 		if checkTriggerUp(win, config.GlobalConfig().TimerStartTrigger) {
 			currentState = stateRunning
 			startTime = time.Now()
@@ -129,6 +132,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 		if blink(dt) {
 			greenIndicator.Draw(canvas)
 		}
+
 		if time.Since(lastStateChange).Seconds() > 0.5 && win.Pressed(pixelgl.KeyR) {
 			reset()
 		}
@@ -152,6 +156,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	if config.GlobalConfig().ScrambleLength > 15 {
 		mat = mat.Moved(pixel.V(0, 20))
 		galderLine1.Draw(canvas, mat)
+
 		mat = pixel.IM.Moved(galderLine2.Bounds().Center().Scaled(-1)).Moved(pixel.V(win.Bounds().W()/2, win.Bounds().H()-45)).Moved(pixel.V(0, -18))
 		galderLine2.Draw(canvas, mat)
 	} else {
@@ -161,20 +166,21 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	if !streamerMode && (currentState == stateDone || currentState == stateWaitingForHold) {
 		mat = pixel.IM.Moved(pixel.V(canvas.Bounds().W(), 0)).Moved(pixel.V(-25, 25))
 		gear.Draw(canvas, mat)
+
 		halfX := gear.Frame().W() / 2
 		halfY := gear.Frame().H() / 2
 		if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(mat, pixel.R(-halfX, -halfY, halfX, halfY), win.MousePosition()) {
-			change = new(scenes.SceneType)
-			*change = scenes.SettingsScene
+			change = util.Ptr(scenes.SettingsScene)
 		}
 	}
+
 	return change
 }
 
 func checkTriggerDown(win util.LimitedWindow, t string) (fired bool) {
 	switch config.Trigger(t) {
-	case config.TriggerControls:
-		return win.Pressed(pixelgl.KeyLeftControl) && win.Pressed(pixelgl.KeyRightControl)
+	case config.TriggerModifiers:
+		return isLeftModifierPressed(win) && isRightModifierPressed(win)
 	case config.TriggerSpacebar:
 		return win.Pressed(pixelgl.KeySpace)
 	case config.TriggerAny:
@@ -187,10 +193,18 @@ func checkTriggerDown(win util.LimitedWindow, t string) (fired bool) {
 	return false
 }
 
+func isLeftModifierPressed(win util.LimitedWindow) bool {
+	return win.Pressed(pixelgl.KeyLeftShift) || win.Pressed(pixelgl.KeyLeftControl) || win.Pressed(pixelgl.KeyLeftSuper) || win.Pressed(pixelgl.KeyLeftAlt)
+}
+
+func isRightModifierPressed(win util.LimitedWindow) bool {
+	return win.Pressed(pixelgl.KeyRightShift) || win.Pressed(pixelgl.KeyRightControl) || win.Pressed(pixelgl.KeyRightSuper) || win.Pressed(pixelgl.KeyRightAlt)
+}
+
 func checkTriggerUp(win util.LimitedWindow, t string) (fired bool) {
 	switch config.Trigger(t) {
-	case config.TriggerControls:
-		return !win.Pressed(pixelgl.KeyLeftControl) || !win.Pressed(pixelgl.KeyRightControl)
+	case config.TriggerModifiers:
+		return !isLeftModifierPressed(win) || !isRightModifierPressed(win)
 	case config.TriggerSpacebar:
 		return !win.Pressed(pixelgl.KeySpace)
 	case config.TriggerAny:
@@ -199,8 +213,10 @@ func checkTriggerUp(win util.LimitedWindow, t string) (fired bool) {
 				return false
 			}
 		}
+
 		return true
 	}
+
 	return false
 }
 
@@ -215,6 +231,7 @@ func buildTimer(t float64) (minsec string, milli string) {
 	// return "01234:56789"
 	minutes := int(t) / 60
 	seconds := int(t) % 60
+
 	return fmt.Sprintf("%02d:%02d", minutes, seconds), fmt.Sprintf(".%03d", int(t*1000)%1000)
 }
 
@@ -253,8 +270,10 @@ func immediatePill(imd *imdraw.IMDraw, win util.LimitedWindow) {
 
 func doScramble() {
 	scramble = util.Scramble()
+
 	galderLine1.Clear()
 	galderLine2.Clear()
+
 	if config.GlobalConfig().ScrambleLength > 15 {
 		line1, line2 := splitScramble(scramble)
 		fmt.Fprint(galderLine1, line1)
@@ -270,14 +289,17 @@ func splitScramble(scramble string) (line1 string, line2 string) {
 	if config.GlobalConfig().ScrambleLength%2 == 0 {
 		count--
 	}
+
 	for i, r := range scramble {
 		if r == ' ' {
 			if count == 0 {
 				split = i
 				break
 			}
+
 			count--
 		}
 	}
+
 	return scramble[:split], scramble[split+1:]
 }

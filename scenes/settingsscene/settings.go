@@ -54,12 +54,12 @@ var leftScramblePt pixel.Vec
 var lastScrambleAdjust time.Time
 var indicatorGrab bool
 
-var triggerOrder = []string{string(config.TriggerControls), string(config.TriggerSpacebar), string(config.TriggerAny)}
+var triggerOrder = []string{string(config.TriggerModifiers), string(config.TriggerSpacebar), string(config.TriggerAny)}
 var labelOrder []*text.Text
 var startTriggerIndex int
 var endTriggerIndex int
 
-var tempConfig config.Config
+var tempConfig *config.Config
 
 // Init creates the resources for the Timer scene
 func Init(win util.LimitedWindow) {
@@ -78,7 +78,7 @@ func Init(win util.LimitedWindow) {
 	fmt.Fprint(scrambleLength, "Scramble Length")
 
 	controlsText = text.New(pixel.ZV, galderAtlas)
-	fmt.Fprint(controlsText, "Controls")
+	fmt.Fprint(controlsText, "Ctrl, Alt, or Shift")
 
 	spacebarText = text.New(pixel.ZV, galderAtlas)
 	fmt.Fprint(spacebarText, "Spacebar")
@@ -159,9 +159,11 @@ func OnShow() {
 // Draw updates and renders the Timer scene
 func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (change *scenes.SceneType) {
 	canvas.Clear(colornames.Black)
+
 	if !win.Pressed(pixelgl.MouseButtonLeft) {
 		indicatorGrab = false
 	}
+
 	cB := canvas.Bounds()
 	// StartTriggerLabel
 	mat := pixel.IM.Moved(startTrigger.Bounds().Center().Scaled(-1)).Moved(pixel.V(cB.W()/4, cB.H()*3/4))
@@ -171,6 +173,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	if win.JustPressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(leftStartArrowRect, win.MousePosition()) {
 		startTriggerIndex = (startTriggerIndex + len(triggerOrder) - 1) % len(triggerOrder)
 	}
+
 	rightStartArrow.Draw(canvas)
 	if win.JustPressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(rightStartArrowRect, win.MousePosition()) {
 		startTriggerIndex = (startTriggerIndex + 1) % len(triggerOrder)
@@ -188,6 +191,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 	if win.JustPressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(leftEndArrowRect, win.MousePosition()) {
 		endTriggerIndex = (endTriggerIndex + len(triggerOrder) - 1) % len(triggerOrder)
 	}
+
 	rightEndArrow.Draw(canvas)
 	if win.JustPressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(rightEndArrowRect, win.MousePosition()) {
 		endTriggerIndex = (endTriggerIndex + 1) % len(triggerOrder)
@@ -214,6 +218,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 		offX := int((pt.X-leftScramblePt.X)/7.5 + 10)
 		tempConfig.ScrambleLength = offX
 	}
+
 	indBox := buildIndicator(pt, indicator)
 	indicator.Draw(canvas)
 
@@ -230,6 +235,7 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 		tempConfig.ScrambleLength = int(math.Max(10, float64(tempConfig.ScrambleLength)-1))
 		lastScrambleAdjust = time.Now()
 	}
+
 	if !indicatorGrab && win.Pressed(pixelgl.MouseButtonLeft) && util.RectIsClicked(rightScrambleArrowRect, win.MousePosition()) && time.Since(lastScrambleAdjust).Seconds() > 0.15 {
 		tempConfig.ScrambleLength = int(math.Min(50, float64(tempConfig.ScrambleLength)+1))
 		lastScrambleAdjust = time.Now()
@@ -237,19 +243,19 @@ func Draw(canvas *pixelgl.Canvas, win util.LimitedWindow, dt *util.DeltaTimer) (
 
 	saveBtn.Draw(canvas, saveMatrix)
 	saveBox.Draw(canvas)
+
 	if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(saveMatrix, saveRect, win.MousePosition()) {
 		tempConfig.TimerStartTrigger = triggerOrder[startTriggerIndex]
 		tempConfig.TimerEndTrigger = triggerOrder[endTriggerIndex]
 		config.SaveConfig(tempConfig)
-		change = new(scenes.SceneType)
-		*change = scenes.TimerScene
+		change = util.Ptr(scenes.TimerScene)
 	}
 
 	cancelBtn.Draw(canvas, cancelMatrix)
 	cancelBox.Draw(canvas)
+
 	if win.JustPressed(pixelgl.MouseButtonLeft) && util.IsClicked(cancelMatrix, cancelRect, win.MousePosition()) {
-		change = new(scenes.SceneType)
-		*change = scenes.TimerScene
+		change = util.Ptr(scenes.TimerScene)
 	}
 
 	return change
@@ -260,11 +266,13 @@ func buildArrow(pt pixel.Vec, imd *imdraw.IMDraw, pointsLeft bool) {
 
 	imd.SetMatrix(pixel.IM.Moved(pt))
 	imd.Push(pixel.V(0, arrowSize), pixel.V(0, -arrowSize))
+
 	if pointsLeft {
 		imd.Push(pixel.V(-arrowSize, 0))
 	} else {
 		imd.Push(pixel.V(arrowSize, 0))
 	}
+
 	imd.Polygon(0)
 }
 
